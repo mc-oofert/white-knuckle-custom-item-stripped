@@ -33,15 +33,6 @@ public class Patches
     const string bundleResourceName = "itembundle";
 #endif
     /// <summary>
-    /// Handles UT_Null components
-    /// Case-sensitive
-    /// Key is whatever ID you set in the Unity Editor, value is a delegate to handle it. Delegate is called with the UT_Null script as a parameter.
-    /// </summary>
-    private static readonly Dictionary<string, Action<UT_Null>> nullHandlers = new()
-    {
-        { "Dummy" , DummyHandler }
-    };
-    /// <summary>
     /// Handles the whole asset bundle part, generally dont touch this
     /// </summary>
     [HarmonyPatch(typeof(CL_AssetManager), nameof(CL_AssetManager.InitializeAssetManager))]
@@ -72,10 +63,8 @@ public class Patches
         GameObject[] objs = bundle.LoadAllAssets<GameObject>();
         WKAssetDatabase db = CL_AssetManager.GetBaseAssetDatabase();
 
-        List<UT_Null> nulls = [];
         foreach (GameObject obj in objs)
         {
-            nulls.AddRange(obj.GetComponentsInChildren<UT_Null>(false));
             if (!obj.TryGetComponent(out Item_Object itemObj)) continue;
             db.itemPrefabs.Add(obj);
             db.entityPrefabs.Add(obj);
@@ -85,11 +74,6 @@ public class Patches
             }
         }
         CL_AssetManager.RefreshDatabaseList();
-        foreach (UT_Null nullScript in nulls)
-        {
-            if (!nullHandlers.ContainsKey(nullScript.id)) continue;
-            nullHandlers[nullScript.id].Invoke(nullScript);
-        }
     }
     static void DummyHandler(UT_Null nullScript)
     {
