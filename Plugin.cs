@@ -27,7 +27,7 @@ public class Patches
     private static AssetBundle bundle;
 #if DEBUG
     //Path to asset bundle file
-    static string bundlePath = ""; //Tip: you can set this to wherever the Unity Editor puts your built asset bundle.
+    static readonly string bundlePath = ""; //Tip: you can set this to wherever the Unity Editor puts your built asset bundle.
 #else //RELEASE
     //Name of the asset bundle embedded resource. Simply add the bundle to your project and set its Build Action to Embedded Resource
     const string bundleResourceName = "itembundle";
@@ -43,8 +43,7 @@ public class Patches
         // Build in the DEBUG configuration to use bundlePath, which is better for testing because you can just restart the level to reload the bundle.
         // Build in the RELEASE configuration to use bundleResourceName, which lets you use the bundle as an embedded resource, so you only need to distribute the DLL
 #if DEBUG
-        if (bundle != null)
-            bundle.Unload(false);
+        bundle?.Unload(false);
         bundle = AssetBundle.LoadFromFile(bundlePath);
 #else //RELEASE
         if (bundle == null)
@@ -74,9 +73,6 @@ public class Patches
             }
         }
         CL_AssetManager.RefreshDatabaseList();
-    }
-    static void DummyHandler(UT_Null nullScript)
-    {
     }
 
     [HarmonyPatch(typeof(ENV_VendingMachine), nameof(ENV_VendingMachine.Start))]
