@@ -25,13 +25,8 @@ public class Plugin : BaseUnityPlugin
 public class Patches
 {
     private static AssetBundle bundle;
-#if DEBUG
-    //Path to asset bundle file
-    static readonly string bundlePath = ""; //Tip: you can set this to wherever the Unity Editor puts your built asset bundle.
-#else //RELEASE
-    //Name of the asset bundle embedded resource. Simply add the bundle to your project and set its Build Action to Embedded Resource
+    //Name of the asset bundle file.
     const string bundleResourceName = "itembundle";
-#endif
     /// <summary>
     /// Handles the whole asset bundle part, generally dont touch this
     /// </summary>
@@ -40,24 +35,11 @@ public class Patches
     [HarmonyWrapSafe]
     public static void AssetEntry(CL_AssetManager __instance)
     {
-        // Build in the DEBUG configuration to use bundlePath, which is better for testing because you can just restart the level to reload the bundle.
-        // Build in the RELEASE configuration to use bundleResourceName, which lets you use the bundle as an embedded resource, so you only need to distribute the DLL
-#if DEBUG
-        bundle?.Unload(false);
-        bundle = AssetBundle.LoadFromFile(bundlePath);
-#else //RELEASE
         if (bundle == null)
         {
-            string resourceName = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith(bundleResourceName));
-
-            using Stream bundleStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
-            if (bundleStream == null) return;
-
-            byte[] buffer = new byte[bundleStream.Length];
-            bundleStream.Read(buffer, 0, buffer.Length);
-            bundle = AssetBundle.LoadFromMemory(buffer);
+            string bundlePath = Path.Combine(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), bundleResourceName);
+            bundle = AssetBundle.LoadFromFile(bundlePath);
         }
-#endif
 
         GameObject[] objs = bundle.LoadAllAssets<GameObject>();
         WKAssetDatabase db = CL_AssetManager.GetBaseAssetDatabase();
